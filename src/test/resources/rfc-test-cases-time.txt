@@ -1,0 +1,33 @@
+Every 3 hours from 9:00 AM to 5:00 PM on a specific day:
+
+ DTSTART;TZID=America/New_York:19970902T090000
+ RRULE:FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T170000Z
+
+ ==> (September 2, 1997 EDT) 09:00,12:00,15:00
+
+Every 15 minutes for 6 occurrences:
+
+ DTSTART;TZID=America/New_York:19970902T090000
+ RRULE:FREQ=MINUTELY;INTERVAL=15;COUNT=6
+
+ ==> (September 2, 1997 EDT) 09:00,09:15,09:30,09:45,10:00,10:15
+
+Every hour and a half for 4 occurrences:
+
+ DTSTART;TZID=America/New_York:19970902T090000
+ RRULE:FREQ=MINUTELY;INTERVAL=90;COUNT=4
+
+ ==> (September 2, 1997 EDT) 09:00,10:30;12:00;13:30
+
+Every 20 minutes from 9:00 AM to 4:40 PM every day:
+
+ DTSTART;TZID=America/New_York:19970902T090000
+ RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40
+ or
+ RRULE:FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16
+
+ ==> (September 2, 1997 EDT) 9:00,9:20,9:40,10:00,10:20,
+                             ... 16:00,16:20,16:40
+     (September 3, 1997 EDT) 9:00,9:20,9:40,10:00,10:20,
+                             ...16:00,16:20,16:40
+     ...

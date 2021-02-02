@@ -60,48 +60,7 @@ data class RecurringRule(
     }
 
     fun getNextEntries(startingInstance: ZonedDateTime): Sequence<ZonedDateTime> {
-        if (interval == 0) {
-            return emptySequence()
-        }
-
-        val interval = IntervalContainer(this)
-        var remainingCount = count ?: -1
-
-        return generateSequence {
-            val (generatedOffset, currentCount) = interval.nextInterval()
-
-            var next = generatedOffset(startingInstance)
-
-            // We generally start with 0 to check if the next date is within the current interval
-            // e.g. if we say yearly on the 5th and it's the 4th, the next one should be _this_ year
-            // and not the year after
-            if (currentCount == 0) {
-                while (next < startingInstance) {
-                    val (newGeneratedOffset, _) = interval.nextInterval()
-                    next = newGeneratedOffset(startingInstance)
-                }
-            }
-
-            // Check if we reached the amount of counted recurrences
-            if (remainingCount == 0) {
-                return@generateSequence null
-            }
-            //            count?.let { specifiedCount ->
-            //                if (currentCount > specifiedCount) {
-            //                    return@generateSequence null
-            //                }
-            //            }
-
-            // Make sure we don't pass the end date
-            if (endDate != null) {
-                if (next > endDate) {
-                    return@generateSequence null
-                }
-            }
-
-            remainingCount -= 1
-            return@generateSequence next
-        }
+        return OccurrenceGenerator.generateFrom(this, startingInstance)
     }
 
     fun asString(): String {
@@ -219,7 +178,7 @@ data class RecurringRule(
                 val (decl, value) = entry.split("=")
                 when (decl) {
                     "FREQ" -> builder.frequency = Frequency.valueOf(value.toUpperCase())
-                    "UNTIL" -> builder.endDate = DATETIME_FORMAT.parse(value) as ZonedDateTime
+                    "UNTIL" -> builder.endDate = ZonedDateTime.parse(value, DATETIME_FORMAT)
                     "COUNT" -> builder.count = value.toInt()
                     "INTERVAL" -> builder.interval = value.toInt()
                     "BYSECOND" -> builder.bySecond = value.asIntList()
@@ -231,7 +190,7 @@ data class RecurringRule(
                     "BYWEEKNO" -> builder.byWeekNr = value.asIntList()
                     "BYMONTH" -> builder.byMonth = value.asIntList()
                     "BYSETPOS" -> builder.bySetPosition = value.asIntList()
-                    "WKST" -> builder.weekStart = WeekDay.valueOf(value)
+                    "WKST" -> builder.weekStart = WeekDay.fromShortName(value)!!
                 }
             }
 

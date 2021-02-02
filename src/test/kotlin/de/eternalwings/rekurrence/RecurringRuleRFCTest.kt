@@ -1,10 +1,24 @@
 package de.eternalwings.rekurrence
 
-import org.junit.jupiter.api.Assertions.*
+import de.eternalwings.rekurrence.Frequency.DAILY
+import de.eternalwings.rekurrence.Frequency.MONTHLY
+import de.eternalwings.rekurrence.Frequency.YEARLY
+import de.eternalwings.rekurrence.WeekDay.Monday
+import de.eternalwings.rekurrence.WeekDay.Tuesday
+import de.eternalwings.rekurrence.support.testForever
+import de.eternalwings.rekurrence.support.testOccurrences
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertIterableEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.time.DayOfWeek.MONDAY
+import java.time.DayOfWeek.TUESDAY
 import java.time.Duration
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.temporal.IsoFields
+import java.time.temporal.TemporalAdjusters
 import kotlin.math.absoluteValue
 
 class RecurringRuleRFCTest {
@@ -64,65 +78,33 @@ class RecurringRuleRFCTest {
 
     @Test
     fun testEvery10Days5Occurrences() {
-        val dtStart = dateTimeAt(1997, 9, 2, 9)
-        val rule = RecurringRule(Frequency.DAILY, interval = 10, count = 5)
-
-        val entries = rule.getNextEntries(dtStart).toList()
-        assertIterableEquals(
-            listOf(
+        testOccurrences {
+            start = dateTimeAt(1997, 9, 2, 9)
+            rule = RecurringRule(DAILY, interval = 10, count = 5)
+            result = listOf(
                 dateTimeAt(1997, 9, 2, 9),
                 dateTimeAt(1997, 9, 12, 9),
                 dateTimeAt(1997, 9, 22, 9),
                 dateTimeAt(1997, 10, 2, 9),
                 dateTimeAt(1997, 10, 12, 9),
-            ), entries
-        )
-    }
-
-    @Test
-    fun testEveryDayInJanuaryForThreeYears() {
-        val dtStart = dateTimeAt(1997, 9, 2, 9)
-        val rule = RecurringRule(Frequency.DAILY, endDate = dateTimeAt(2000, 1, 31, 14), byMonth = listOf(1))
-
-        val entries = rule.getNextEntries(dtStart).toList()
-        for (i in 1..3) {
-            for (j in 0..30) {
-                val entry = entries[(i - 1) * 31 + j]
-                assertEquals(dateTimeAt(1997 + i, 1, j + 1, 9), entry)
-            }
+            )
         }
     }
 
     @Test
-    fun testWeeklyFor10Occurrences() {
-        val dtStart = dateTimeAt(1997, 9, 2, 9)
-        val rule = RecurringRule(Frequency.WEEKLY, count = 10)
-        val entries = rule.getNextEntries(dtStart).toList()
-
-        assertIterableEquals(
-            listOf(
-                dateTimeAt(1997, 9, 2, 9),
-                dateTimeAt(1997, 9, 9, 9),
-                dateTimeAt(1997, 9, 16, 9),
-                dateTimeAt(1997, 9, 23, 9),
-                dateTimeAt(1997, 9, 30, 9),
-                dateTimeAt(1997, 10, 7, 9),
-                dateTimeAt(1997, 10, 14, 9),
-                dateTimeAt(1997, 10, 21, 9),
-                dateTimeAt(1997, 10, 28, 9),
-                dateTimeAt(1997, 11, 4, 9)
-            ), entries
-        )
-    }
-
-    @Test
-    fun testWeekUntilDecember241997() {
-        val dtStart = dateTimeAt(1997, 9, 2, 9)
-        val rule = RecurringRule(Frequency.WEEKLY, endDate = dateTimeAt(1997, 12, 24))
+    fun testEveryDayInJanuaryForThreeYears() {
+        val dtStart = dateTimeAt(1997, 9, 1, 9)
+        val rule = RecurringRule(Frequency.DAILY, endDate = dateTimeAt(2000, 1, 31, 14), byMonth = listOf(1))
 
         val entries = rule.getNextEntries(dtStart).toList()
-        assertEquals(17, entries.size)
-        // TODO
+        val expectedList = mutableListOf<ZonedDateTime>()
+        for (i in 1..3) {
+            for (j in 0..30) {
+                expectedList.add(dateTimeAt(1997 + i, 1, j + 1, 9))
+            }
+        }
+
+        assertIterableEquals(expectedList, entries)
     }
 
     @Test
@@ -142,105 +124,54 @@ class RecurringRuleRFCTest {
     }
 
     @Test
-    fun testWeeklyOnTuesdayAndThursdayForFiveWeeks() {
-        val dtStart = dateTimeAt(1997, 9, 2, 9)
-        val tuesdayAndThursday = listOf(WeekDayOccurrence(WeekDay.Tuesday), WeekDayOccurrence(WeekDay.Thursday))
-        val rules = listOf(
-            RecurringRule(
-                Frequency.WEEKLY,
-                endDate = dateTimeAt(1997, 10, 7),
-                weekStart = WeekDay.Sunday,
-                byWeekDay = tuesdayAndThursday
-            ),
-            RecurringRule(
-                Frequency.WEEKLY,
-                count = 10,
-                weekStart = WeekDay.Sunday,
-                byWeekDay = tuesdayAndThursday
+    fun testEveryTuesdayEveryOtherMonth() {
+        testForever {
+            start = dateTimeAt(1997, 9, 2, 9)
+            rule = RecurringRule(
+                MONTHLY,
+                interval = 2,
+                byWeekDay = listOf(WeekDayOccurrence(Tuesday))
             )
-        )
-
-        for (rule in rules) {
-            val entries = rule.getNextEntries(dtStart).toList()
-            assertIterableEquals(
-                listOf(
-                    dateTimeAt(1997, 9, 2, 9),
-                    dateTimeAt(1997, 9, 4, 9),
-                    dateTimeAt(1997, 9, 9, 9),
-                    dateTimeAt(1997, 9, 11, 9),
-                    dateTimeAt(1997, 9, 16, 9),
-                    dateTimeAt(1997, 9, 18, 9),
-                    dateTimeAt(1997, 9, 23, 9),
-                    dateTimeAt(1997, 9, 25, 9),
-                    dateTimeAt(1997, 9, 30, 9),
-                    dateTimeAt(1997, 10, 2, 9),
-                ), entries
-            )
+            result = generateSequence(start) {
+                val next = it.plusWeeks(1)
+                if (next.month == it.month) {
+                    next
+                } else {
+                    next.plusMonths(1).with(TemporalAdjusters.dayOfWeekInMonth(1, TUESDAY))
+                }
+            }.asIterable()
         }
     }
 
     @Test
-    fun testEveryOtherWeekOnMonWedFriUntilDec241997() {
-        val dtStart = dateTimeAt(1997, 9, 1, 9)
-        val rule = RecurringRule(
-            Frequency.WEEKLY,
-            interval = 2,
-            endDate = dateTimeAt(1997, 12, 24),
-            weekStart = WeekDay.Sunday,
-            byWeekDay = listOf(
-                WeekDayOccurrence(WeekDay.Monday),
-                WeekDayOccurrence(WeekDay.Wednesday),
-                WeekDayOccurrence(WeekDay.Friday)
+    fun testEvery20thMondayOfTheYearForever() {
+        testForever {
+            start = dateTimeAt(1997, 5, 19, 9)
+            rule = RecurringRule(
+                YEARLY,
+                byWeekDay = listOf(WeekDayOccurrence(Monday, 20))
             )
-        )
-
-        val entries = rule.getNextEntries(dtStart).toList()
-        assertEquals(25, entries.size)
-        // TODO
+            result = generateSequence(start) {
+                it.plusYears(1).with(TemporalAdjusters.firstDayOfYear()).with(TemporalAdjusters.nextOrSame(MONDAY))
+                    .plusWeeks(19)
+            }.asIterable()
+        }
     }
 
     @Test
-    fun testEveryOtherWeekOnTuesdayAndThursdayFor8Occurrences() {
-        val dtStart = dateTimeAt(1997, 9, 2, 9)
-        val rule = RecurringRule(
-            Frequency.WEEKLY,
-            interval = 2,
-            count = 8,
-            weekStart = WeekDay.Sunday,
-            byWeekDay = listOf(WeekDayOccurrence(WeekDay.Tuesday), WeekDayOccurrence(WeekDay.Thursday))
-        )
-
-        val entries = rule.getNextEntries(dtStart).toList()
-        assertIterableEquals(listOf(
-            dateTimeAt(1997, 9, 2, 9),
-            dateTimeAt(1997, 9, 4, 9),
-            dateTimeAt(1997, 9, 16, 9),
-            dateTimeAt(1997, 9, 18, 9),
-            dateTimeAt(1997, 9, 30, 9),
-            dateTimeAt(1997, 10, 2, 9),
-            dateTimeAt(1997, 10, 14, 9),
-            dateTimeAt(1997, 10, 16, 9),
-        ), entries)
-    }
-
-    @Test
-    fun testMonthlyOnTheFirstFridayFor10Occurrences() {
-        val dtStart = dateTimeAt(1997, 9, 2, 9)
-        val rule = RecurringRule(Frequency.MONTHLY, count = 10, byWeekDay = listOf(WeekDayOccurrence(WeekDay.Friday, 1)))
-        val entries = rule.getNextEntries(dtStart).toList()
-
-        assertIterableEquals(listOf(
-            dateTimeAt(1997, 9, 5, 9),
-            dateTimeAt(1997, 10, 3, 9),
-            dateTimeAt(1997, 11, 7, 9),
-            dateTimeAt(1997, 12, 5, 9),
-            dateTimeAt(1998, 1, 2, 9),
-            dateTimeAt(1998, 2, 6, 9),
-            dateTimeAt(1998, 3, 6, 9),
-            dateTimeAt(1998, 4, 3, 9),
-            dateTimeAt(1998, 5, 1, 9),
-            dateTimeAt(1998, 6, 5, 9),
-        ), entries)
+    fun testMondayOfWeekNumber20Forever() {
+        testForever {
+            start = dateTimeAt(1997, 5, 12, 9)
+            rule = RecurringRule(
+                YEARLY,
+                byWeekNr = listOf(20),
+                byWeekDay = listOf(WeekDayOccurrence(Monday))
+            )
+            result = generateSequence(start) {
+                val nextYear = it.plusYears(1)
+                nextYear.with(IsoFields.WEEK_OF_WEEK_BASED_YEAR, 20).with(TemporalAdjusters.previousOrSame(MONDAY))
+            }.asIterable()
+        }
     }
 
     companion object {

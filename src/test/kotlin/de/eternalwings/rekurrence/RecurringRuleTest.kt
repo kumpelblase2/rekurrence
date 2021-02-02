@@ -42,8 +42,8 @@ class RecurringRuleTest {
         val recurringRule = RecurringRule(Frequency.DAILY, interval = 2)
 
         val nextTwoEntries = recurringRule.getNextEntries(startingDate).take(2).toList()
-        val firstDate = dateTimeAt(2021, 1, 3)
-        val secondDate = dateTimeAt(2021, 1, 5)
+        val firstDate = dateTimeAt(2021, 1, 1)
+        val secondDate = dateTimeAt(2021, 1, 3)
         assertEquals(firstDate, nextTwoEntries[0])
         assertEquals(secondDate, nextTwoEntries[1])
     }
@@ -54,8 +54,8 @@ class RecurringRuleTest {
         val recurringRule = RecurringRule(Frequency.WEEKLY)
 
         val nextTwoEntries = recurringRule.getNextEntries(startingDate).take(2).toList()
-        val firstDate = dateTimeAt(2021, 1, 8)
-        val secondDate = dateTimeAt(2021, 1, 15)
+        val firstDate = dateTimeAt(2021, 1, 1)
+        val secondDate = dateTimeAt(2021, 1, 8)
         assertEquals(firstDate, nextTwoEntries[0])
         assertEquals(secondDate, nextTwoEntries[1])
     }
@@ -66,7 +66,7 @@ class RecurringRuleTest {
         val recurringRule = RecurringRule(Frequency.DAILY, interval = 2, count = 1)
 
         val nextEntries = recurringRule.getNextEntries(startingDate).toList()
-        val firstDate = dateTimeAt(2021, 1, 3)
+        val firstDate = dateTimeAt(2021, 1, 1)
         assertEquals(firstDate, nextEntries[0])
         assertEquals(1, nextEntries.size)
     }
@@ -100,7 +100,7 @@ class RecurringRuleTest {
 
     @Test
     fun testYearBoundaries() {
-        val startingDate = dateTimeAt(2020, 12, 28, hour = 8)
+        val startingDate = dateTimeAt(2020, 12, 28, hour = 9)
         val recurringRule = RecurringRule(Frequency.WEEKLY, byHour = listOf(8))
         val next = recurringRule.getNextEntries(startingDate).first()
         assertEquals(dateTimeAt(2021, 1, 4, 8), next)
